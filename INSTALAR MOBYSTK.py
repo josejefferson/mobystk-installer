@@ -28,8 +28,11 @@ asciiDigits = [
 	'███████\n     ██\n    ██ \n   ██  \n   ██  ',      # 7
 	' █████ \n██   ██\n █████ \n██   ██\n █████ ',      # 8
 	' █████ \n██   ██\n ██████\n     ██\n █████ ',      # 9
-	'██  ██\n   ██ \n  ██  \n ██   \n██  ██'            # %
+	'██  ██\n   ██ \n  ██  \n ██   \n██  ██',           # %
+	'        \n        \n ██████ \n        \n        '  # -
 ]
+
+
 
 
 # Limpa o console
@@ -42,7 +45,10 @@ def clearConsole():
 
 # Retorna uma porcentagem em ASCII Art
 def getPercentageAscii(percentage):
-	percentage = str(percentage)
+	if percentage < 0:
+		percentage = [-1]
+	else:
+		percentage = str(percentage)
 
 	text = ''
 	digits = []
@@ -59,7 +65,7 @@ def getPercentageAscii(percentage):
 
 
 # Mostra o processo no console
-def printStep(step, maxStep, tip):
+def printStep(step, maxStep, tip = ''):
 	text = ''
 	lines = logo.split('\n')
 	if terminalWidth < len(max(lines, key=len)):
@@ -67,10 +73,12 @@ def printStep(step, maxStep, tip):
 	lines = list(map(lambda l: l.center(terminalWidth).rstrip(), lines))
 	text += '\n'
 	for l in lines: text += l + '\n'
+
 	text += '\n'
-	text += f'Instalando ({step}/{maxStep})'.center(terminalWidth).rstrip() + '\n'
+	stepText = step if step > -1 else '-'
+	text += f'Instalando ({stepText}/{maxStep})'.center(terminalWidth).rstrip() + '\n'
 	text += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'.center(terminalWidth).rstrip() + '\n\n'
-	
+
 	percentage = int(step / maxStep * 100)
 	percentageAscii = getPercentageAscii(percentage).split('\n')
 	for line in percentageAscii:
@@ -81,3 +89,38 @@ def printStep(step, maxStep, tip):
 
 	clearConsole()
 	print(text)
+
+
+# Tenta importar os módulos
+def importModules():
+	try:
+		from colorama import init as coloramaInit, Back as B, Fore as F, Style as S
+		import datetime
+		import os
+		import requests
+		import shutil
+		import zipfile
+		return True
+	except Exception:
+		return False
+
+# if os.path.exists('./MobyStk/'):
+	# erro
+# else:
+	# continuar
+
+# os.mkdir('./MobyStk')
+# os.chdir('./MobyStk')
+
+
+
+# TODOS:
+# Verificar se não há uma instalação existente
+# Verificar módulos
+# Instalar módulos se necessário
+# Criar e entrar na pasta ./mobystk/
+# Baixar mobystk.zip
+# Extrair
+# Escrever arquivo .lastUpdate.txt
+# Instalar atalho se Windows
+# Abrir atalho na pasta ./mobystk/MobyStk.lnk se Windows
