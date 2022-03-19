@@ -32,7 +32,7 @@ terminalSize = os.get_terminal_size()
 terminalWidth = terminalSize[0]
 terminalHeight = terminalSize[1]
 
-logo = """
+logos = ["""
    ▄▄▄▄███▄▄▄▄    ▄██████▄  ▀█████████▄  ▄██   ▄      ▄████████     ███        ▄█   ▄█▄ 
  ▄██▀▀▀███▀▀▀██▄ ███    ███   ███    ███ ███   ██▄   ███    ███ ▀█████████▄   ███ ▄███▀ 
  ███   ███   ███ ███    ███   ███    ███ ███▄▄▄███   ███    █▀     ▀███▀▀██   ███▐██▀   
@@ -42,7 +42,27 @@ logo = """
  ███   ███   ███ ███    ███   ███    ███ ███   ███    ▄█    ███     ███       ███ ▀███▄ 
   ▀█   ███   █▀   ▀██████▀  ▄█████████▀   ▀█████▀   ▄████████▀     ▄████▀     ███   ▀█▀ 
                                                                               ▀         
-""".strip('\n')
+""".strip('\n'),
+
+"""
+
+ ███████ ██████  ██████   ██████          ██ 
+ ██      ██   ██ ██   ██ ██    ██     ██ ██  
+ █████   ██████  ██████  ██    ██        ██  
+ ██      ██   ██ ██   ██ ██    ██     ██ ██  
+ ███████ ██   ██ ██   ██  ██████          ██ 
+
+""",
+
+"""
+
+ ██████  ██████   ██████  ███    ██ ████████  ██████         ██  
+ ██   ██ ██   ██ ██    ██ ████   ██    ██    ██    ██     ██  ██ 
+ ██████  ██████  ██    ██ ██ ██  ██    ██    ██    ██         ██ 
+ ██      ██   ██ ██    ██ ██  ██ ██    ██    ██    ██     ██  ██ 
+ ██      ██   ██  ██████  ██   ████    ██     ██████         ██  
+
+"""]
 
 asciiDigits = [
 	' ██████ \n██  ████\n██ ██ ██\n████  ██\n ██████ ', # 0
@@ -109,11 +129,11 @@ def getPercentageAscii(percentage):
 
 
 # Mostra o processo no console
-def printStep(step, tip = '', status = None):
+def printStep(step, tip = '', status = None, logo = 0):
 	global currentStep
 	if not currentStep or step > currentStep: currentStep = step
 	text = ''
-	lines = logo.split('\n')
+	lines = logos[logo].split('\n')
 	if terminalWidth < len(max(lines, key=len)):
 		lines = list(map(lambda l: l[0:terminalWidth - 1], lines))
 	lines = list(map(center, lines))
@@ -148,7 +168,7 @@ def error(title = None, description = None, details = None, stop = True):
 	elif description:
 		text += description
 	text += '\a'
-	printStep(-1, text, '[ERRO] ' + title if title else None)
+	printStep(-1, text, '[ERRO] ' + title if title else None, logo=1)
 	if stop:
 		if currentStep >= 4:
 			os.chdir('../')
@@ -291,7 +311,7 @@ try:
 	copyFiles()
 	cleanAndFinalize()
 	createShortcuts()
-	printStep(steps, 'O MobyStk foi instalado com sucesso! Você pode fechar esta janela agora\nAbra o MobyStk clicando no arquivo "INICIAR" na pasta "MobyStk"\a', 'Instalação finalizada')
+	printStep(steps, 'O MobyStk foi instalado com sucesso! Você pode fechar esta janela agora\nAbra o MobyStk clicando no arquivo "INICIAR" na pasta "MobyStk"\a', 'Instalação finalizada', logo = 2)
 	input()
 except KeyboardInterrupt:
 	pass
