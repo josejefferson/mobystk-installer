@@ -1,10 +1,11 @@
 import os
 import datetime
+import importlib.util
 import shutil
 import subprocess
+from sys import executable
 import zipfile
 
-STEPS = 7
 token = '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'
 user = 'josejefferson'
 repository = 'joystick'
@@ -15,6 +16,17 @@ updateFolderName = f'{user}-{repository}-'
 internalFolder = '.update'
 lastUpdateFile = f'{internalFolder}/lastUpdate.txt'
 
+# Módulos necessários para a utilização do MobyStk
+modules = [
+	'colorama',
+	'prompt_toolkit',
+	'pynput',
+	'pyqrcode',
+	'requests',
+	'SimpleWebSocketServer'
+]
+
+STEPS = 9 if os.name == 'nt' else 8
 terminalSize = os.get_terminal_size()
 terminalWidth = terminalSize[0]
 terminalHeight = terminalSize[1]
@@ -55,7 +67,26 @@ def clearConsole():
 	os.system(command)
 
 
-# Retorna uma porcentagem em ASCII Art
+# Centraliza um texto no console
+def center(text):
+	if type(text) == list:
+		text = '\n'.join(text)
+	text = text.split('\n')
+
+	allChunks = []
+	for line in text:
+		chunkLen = terminalWidth - 1
+		chunks = [line[i:i+chunkLen] for i in range(0, len(line), chunkLen)]
+		if len(chunks):
+			for chunk in chunks:
+				allChunks.append(chunk.center(terminalWidth).rstrip())
+		else:
+			allChunks.append('')
+
+	return '\n'.join(allChunks)
+
+
+# Retorna um número de porcentagem em ASCII Art
 def getPercentageAscii(percentage):
 	if percentage < 0:
 		percentage = [-1]
@@ -81,62 +112,64 @@ def printStep(step, tip = '', status = None):
 	text = ''
 	lines = logo.split('\n')
 	if terminalWidth < len(max(lines, key=len)):
-		lines = list(map(lambda l: l[0:terminalWidth], lines))
-	lines = list(map(lambda l: l.center(terminalWidth).rstrip(), lines))
+		lines = list(map(lambda l: l[0:terminalWidth - 1], lines))
+	lines = list(map(center, lines))
 	text += '\n'
 	for l in lines: text += l + '\n'
 
 	text += '\n'
-	stepText = step if step > -1 else '-'
+	stepText = int(step) if step > -1 else '-'
 	if status:
-		text += status.center(terminalWidth).rstrip() + '\n'
+		text += center(status) + '\n'
 	else:
-		text += f'Instalando ({stepText}/{STEPS})'.center(terminalWidth).rstrip() + '\n'
-	text += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'.center(terminalWidth).rstrip() + '\n\n'
+		text += center(f'Instalando ({stepText}/{STEPS})') + '\n'
+	text += center('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━') + '\n\n'
 
 	percentage = int(step / STEPS * 100)
 	percentageAscii = getPercentageAscii(percentage).split('\n')
-	for line in percentageAscii:
-		text += line.center(terminalWidth).rstrip() + '\n'
-	text += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'.center(terminalWidth).rstrip() + '\n'
-	for line in tip.split('\n'):
-		text += line.center(terminalWidth).rstrip() + '\n'
+	text += center(percentageAscii) + '\n'
+	text += center('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━') + '\n'
+	text += center(tip)
 
 	clearConsole()
 	print(text)
 
 
-# Cria a pasta do MobyStk
-def createFolder():
-	printStep(0, 'Verificando e criando pasta do MobyStk')
-	try:
-		if os.path.exists('./MobyStk/'):
-			printStep(-1, 'Remova a pasta "MobyStk" depois abra novamente o instalador para prosseguir', 'ERRO: Instalação antiga detectada')
-			return input()
-		os.mkdir('./MobyStk')
-		os.chdir('./MobyStk')
-	except Exception as err:
-		printStep(-1, str(err), 'ERRO: Ocorreu um erro ao criar pasta do MobyStk')
+# Exibe um erro
+def error(title = None, description = None, details = None, stop = True):
+	text = ''
+	if description and details:
+		text += description + '\n\n[DETALHES DO ERRO] ' + str(details)
+	elif details:
+		text += '[DETALHES DO ERRO] ' + str(details)
+	elif description:
+		text += description
+	text += '\a'
+	printStep(-1, text, '[ERRO] ' + title if title else None)
+	if stop:
 		input()
 		quit()
+	else:
+		input(center('\nPressione ENTER para continuar...'))
 
 
 # Instala os módulos pelo PIP
 def installModules():
 	printStep(2, 'Instalando módulos')
-	input('Pressione ENTER para prosseguir...') #temp
+	errors = 0
 	try:
-		commands = [
-			'python -m pip install colorama',
-			'python -m pip install prompt_toolkit',
-			'python -m pip install pynput',
-			'python -m pip install pyqrcode',
-			'python -m pip install requests',
-			'python -m pip install SimpleWebSocketServer'
-		]
-		for c in commands: subprocess.check_output(c.replace('python -m', f'"{sys.executable}" -m'))
+		for i in range(len(modules)):
+			module = modules[i]
+			errorText = '' if errors == 0 else f' - {errors} erro(s)'
+			printStep(2 + (i / len(modules)), f'Instalando módulos ({module} - {i + 1}/{len(modules)}{errorText})')
+			code = subprocess.call(
+				[executable, '-m', 'pip', '--disable-pip-version-check', 'install', module],
+				stdout = subprocess.DEVNULL,
+				stderr = subprocess.DEVNULL
+			)
+			if code != 0: errors += 1
 	except Exception as err:
-		printStep(-1, str(err), 'ERRO: Falha na instalação dos módulos')
+		error('Falha na instalação dos módulos', details=err)
 
 
 # Importa os módulos
@@ -144,12 +177,13 @@ def importModules(showError = False):
 	try:
 		global requests
 		import requests
+		for module in modules:
+			if not importlib.util.find_spec(module):
+				raise Exception(f'Cannot find module "{module}"')
 		return True
-	except:
+	except Exception as err:
 		if not showError: return False
-		printStep(-1, 'Tente reiniciar o instalador', 'ERRO: Falha na importação dos módulos')
-		input()
-		quit()
+		error('Falha na importação dos módulos', 'Alguns módulos podem não estar instalados, verifique sua conexão com a internet e tente novamente', err, stop=False)
 
 
 # Verifica e corrige módulos
@@ -161,38 +195,48 @@ def verifyAndFixModules():
 		importModules(True)
 
 
-# Baixa o MobyStk
+# Cria a pasta do MobyStk
+def createFolder():
+	printStep(3, 'Verificando e criando pasta do MobyStk')
+	try:
+		if os.path.exists('./MobyStk/'):
+			error('Instalação antiga detectada', 'Remova a pasta "MobyStk" depois abra novamente o instalador para prosseguir')
+		os.mkdir('./MobyStk')
+		os.chdir('./MobyStk')
+	except Exception as err:
+		error('Falha ao criar pasta do MobyStk', details=err)
+
+
+# Baixa o MobyStk em formato ZIP
 def download():
-	printStep(3, 'Baixando o MobyStk')
+	printStep(4, 'Baixando o MobyStk')
 	try:
 		response = requests.get(zipURL, headers=headers)
 		if response.status_code != 200: raise BadStatusCode(response)
 		with open(downloadedZIPName, 'wb') as file:
 			file.write(response.content)
+	except NameError as err:
+		error('Falha ao baixar o MobyStk', 'Provavelmente o módulo "requests" não foi instalado. Verifique sua conexão com a internet e tente novamente', err)
 	except Exception as err:
-		printStep(-1, str(err), 'ERRO: Falha ao baixar o MobyStk')
-		input()
-		quit()
+		error('Falha ao baixar o MobyStk', 'Verifique sua conexão com a internet e tente novamente', err)
 
 
-# Extrair o arquivo ZIP
+# Extrai o arquivo ZIP
 def extract():
-	printStep(4, 'Extraindo arquivos')
+	printStep(5, 'Extraindo arquivos')
 	try:
+		global extractFolderName
 		with zipfile.ZipFile(downloadedZIPName, 'r') as file:
 			file.extractall()
 		dirList = os.listdir('.')
 		extractFolderName = [d for d in dirList if d.startswith(updateFolderName)][0]
-		return extractFolderName
 	except Exception as err:
-		printStep(-1, str(err), 'ERRO: Falha ao extrair arquivos')
-		input()
-		quit()
+		error('Falha ao extrair arquivos', details=err)
 
 
-# Copia os arquivos extraídos para a pasta
-def copyFiles(extractFolderName):
-	printStep(5, 'Copiando arquivos')
+# Copia os arquivos extraídos para a pasta principal
+def copyFiles():
+	printStep(6, 'Copiando arquivos')
 	try:
 		for item in os.listdir(extractFolderName):
 			srcPath = os.path.join(extractFolderName, item)
@@ -202,13 +246,12 @@ def copyFiles(extractFolderName):
 			else:
 				shutil.copy2(srcPath, destPath)
 	except Exception as err:
-		printStep(-1, str(err), 'ERRO: Falha ao copiar os arquivos')
-		input()
-		quit()
+		error('Falha ao copiar os arquivos', details=err)
 
 
-def cleanAndFinalize(extractFolderName):
-	printStep(6, 'Finalizando')
+# Remove os arquivos usados na instalação
+def cleanAndFinalize():
+	printStep(7, 'Finalizando a instalação')
 	try:
 		shutil.rmtree(extractFolderName)
 		if os.path.exists(downloadedZIPName):
@@ -218,29 +261,34 @@ def cleanAndFinalize(extractFolderName):
 		with open(lastUpdateFile, 'w') as file:
 			file.write(datetime.datetime.now().isoformat())
 	except Exception as err:
-		printStep(-1, str(err), 'ERRO: Falha ao finalizar')
-		input()
-		quit()
+		error('Falha ao finalizar a instalação', details=err, stop=False)
 
 
-# INÍCIO!!!	
-verifyAndFixModules()
-createFolder()
-download()
-extractFolderName = extract()
-copyFiles(extractFolderName)
-cleanAndFinalize(extractFolderName)
+# Criar atalho
+def createShortcuts():
+	if os.name != 'nt': return
+	printStep(8, 'Criando atalhos')
+	try:
+		os.system(f"powershell \"$s=(New-Object -COM WScript.Shell).CreateShortcut('%userprofile%\\Desktop\\MobyStk.lnk');$s.TargetPath='{os.getcwd()}\\INICIAR.py';$s.Description='Use seu smartphone como controle de videogame para PC';$s.IconLocation='{os.getcwd()}\\web\\img\\icon.ico';$s.Save()\"")
+		os.system(f"powershell \"$s=(New-Object -COM WScript.Shell).CreateShortcut('%appdata%\\Microsoft\\Windows\\Start Menu\\MobyStk.lnk');$s.TargetPath='{os.getcwd()}\\INICIAR.py';$s.IconLocation='{os.getcwd()}\\web\\img\\icon.ico';$s.Save()\"")
+		os.system(f"powershell \"$s=(New-Object -COM WScript.Shell).CreateShortcut('{os.getcwd()}\\MobyStk.lnk');$s.TargetPath='{os.getcwd()}\\INICIAR.py';$s.IconLocation='{os.getcwd()}\\web\\img\\icon.ico';$s.Save()\"")
+	except: pass
 
-printStep(7, 'O MobyStk foi instalado com sucesso!', 'Instalação finalizada')
-# ainda falta os atalhos!
 
-# TODOS:
-# Verificar módulos
-# Verificar se não há uma instalação existente
-# Instalar módulos se necessário
-# Criar e entrar na pasta ./mobystk/
-# Baixar mobystk.zip
-# Extrair
-# Escrever arquivo .lastUpdate.txt
-# Instalar atalho se Windows
-# Abrir atalho na pasta ./mobystk/MobyStk.lnk se Windows
+try:
+	printStep(0, 'Preparando a instalação, aguarde!', 'Preparando')
+	verifyAndFixModules()
+	createFolder()
+	download()
+	extract()
+	copyFiles()
+	cleanAndFinalize()
+	createShortcuts()
+	printStep(STEPS, 'O MobyStk foi instalado com sucesso! Você pode fechar esta janela agora\a', 'Instalação finalizada')
+	input()
+except KeyboardInterrupt:
+	pass
+except Exception as err:
+	print('Ocorreu um erro, verifique os detalhes abaixo:')
+	print(str(err))
+	input()
