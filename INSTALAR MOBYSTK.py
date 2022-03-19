@@ -26,7 +26,8 @@ modules = [
 	'SimpleWebSocketServer'
 ]
 
-STEPS = 9 if os.name == 'nt' else 8
+steps = 9 if os.name == 'nt' else 8
+currentStep = None
 terminalSize = os.get_terminal_size()
 terminalWidth = terminalSize[0]
 terminalHeight = terminalSize[1]
@@ -109,6 +110,8 @@ def getPercentageAscii(percentage):
 
 # Mostra o processo no console
 def printStep(step, tip = '', status = None):
+	global currentStep
+	if not currentStep or step > currentStep: currentStep = step
 	text = ''
 	lines = logo.split('\n')
 	if terminalWidth < len(max(lines, key=len)):
@@ -122,10 +125,10 @@ def printStep(step, tip = '', status = None):
 	if status:
 		text += center(status) + '\n'
 	else:
-		text += center(f'Instalando ({stepText}/{STEPS})') + '\n'
+		text += center(f'Instalando ({stepText}/{steps})') + '\n'
 	text += center('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━') + '\n\n'
 
-	percentage = int(step / STEPS * 100)
+	percentage = int(step / steps * 100)
 	percentageAscii = getPercentageAscii(percentage).split('\n')
 	text += center(percentageAscii) + '\n'
 	text += center('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━') + '\n'
@@ -147,6 +150,10 @@ def error(title = None, description = None, details = None, stop = True):
 	text += '\a'
 	printStep(-1, text, '[ERRO] ' + title if title else None)
 	if stop:
+		if currentStep >= 4:
+			os.chdir('../')
+			try: shutil.rmtree('./MobyStk/')
+			except: pass
 		input()
 		quit()
 	else:
@@ -212,7 +219,7 @@ def download():
 	printStep(4, 'Baixando o MobyStk')
 	try:
 		response = requests.get(zipURL, headers=headers)
-		if response.status_code != 200: raise BadStatusCode(response)
+		if response.status_code != 200: raise Exception(response)
 		with open(downloadedZIPName, 'wb') as file:
 			file.write(response.content)
 	except NameError as err:
@@ -284,7 +291,7 @@ try:
 	copyFiles()
 	cleanAndFinalize()
 	createShortcuts()
-	printStep(STEPS, 'O MobyStk foi instalado com sucesso! Você pode fechar esta janela agora\a', 'Instalação finalizada')
+	printStep(steps, 'O MobyStk foi instalado com sucesso! Você pode fechar esta janela agora\nAbra o MobyStk clicando no arquivo "INICIAR" na pasta "MobyStk"\a', 'Instalação finalizada')
 	input()
 except KeyboardInterrupt:
 	pass
