@@ -107,12 +107,17 @@ def center(text):
 	return '\n'.join(allChunks)
 
 
+# Retorna uma barra de progresso
+def getProgressBar(percentage):
+	text = '▓' * int(percentage / 100 * terminalWidth)
+	text = text.ljust(terminalWidth, '░')
+	return text
+
+
 # Retorna um número de porcentagem em ASCII Art
 def getPercentageAscii(percentage):
-	if percentage < 0:
-		percentage = [-1]
-	else:
-		percentage = str(percentage)
+	if percentage < 0: percentage = [-1]
+	else: percentage = str(percentage)
 
 	text = ''
 	digits = []
@@ -132,7 +137,10 @@ def getPercentageAscii(percentage):
 def printStep(step, tip = '', status = None, logo = 0):
 	global currentStep
 	if not currentStep or step > currentStep: currentStep = step
-	text = ''
+	percentage = int(step / steps * 100)
+
+	text = getProgressBar(percentage) + '\n\n'
+
 	lines = logos[logo].split('\n')
 	if terminalWidth < len(max(lines, key=len)):
 		lines = list(map(lambda l: l[0:terminalWidth - 1], lines))
@@ -148,7 +156,6 @@ def printStep(step, tip = '', status = None, logo = 0):
 		text += center(f'Instalando ({stepText}/{steps})') + '\n'
 	text += center('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━') + '\n\n'
 
-	percentage = int(step / steps * 100)
 	percentageAscii = getPercentageAscii(percentage).split('\n')
 	text += center(percentageAscii) + '\n'
 	text += center('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━') + '\n'
