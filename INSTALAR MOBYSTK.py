@@ -135,32 +135,47 @@ def getPercentageAscii(percentage):
 
 # Mostra o processo no console
 def printStep(step, tip = '', status = None, logo = 0):
+	# Atualiza o passo atual
 	global currentStep
 	if not currentStep or step > currentStep: currentStep = step
+	
+	# Retorna a porcentagem do progresso
 	percentage = int(step / steps * 100)
 
-	text = getProgressBar(percentage) + '\n\n'
+	# Variável contendo o texto a ser mostrado
+	text = ''
 
+	# Barra de progresso
+	text += getProgressBar(percentage) + '\n\n'
+
+	# Logo "MobyStk"
 	lines = logos[logo].split('\n')
 	if terminalWidth < len(max(lines, key=len)):
 		lines = list(map(lambda l: l[0:terminalWidth - 1], lines))
 	lines = list(map(center, lines))
 	text += '\n'
 	for l in lines: text += l + '\n'
-
 	text += '\n'
+
+	# Texto informativo do passo atual/total
 	stepText = int(step) if step > -1 else '-'
 	if status:
 		text += center(status) + '\n'
 	else:
 		text += center(f'Instalando ({stepText}/{steps})') + '\n'
+
 	text += center('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━') + '\n\n'
 
+	# Porcentagem
 	percentageAscii = getPercentageAscii(percentage).split('\n')
 	text += center(percentageAscii) + '\n'
+
 	text += center('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━') + '\n'
+
+	# Dica ou texto explicativo
 	text += center(tip)
 
+	# Mostra todo o conteúdo
 	clearConsole()
 	print(text)
 
@@ -176,7 +191,10 @@ def error(title = None, description = None, details = None, stop = True):
 		text += description
 	text += '\a'
 	printStep(-1, text, '[ERRO] ' + title if title else None, logo=1)
+	
+	# Para a instalação ou pergunta se quer continuar
 	if stop:
+		# Exclui a pasta do MobyStk caso tenha ocorrido um erro
 		if currentStep >= 4:
 			os.chdir('../')
 			try: shutil.rmtree('./MobyStk/')
