@@ -6,10 +6,10 @@ import subprocess
 from sys import executable
 import zipfile
 
-token = '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'
+token = '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'
 user = 'josejefferson'
-repository = 'joystick'
-zipURL = f'https://api.github.com/repos/{user}/{repository}/zipball/master'
+repository = 'mobystk'
+zipURL = f'https://api.github.com/repos/{user}/{repository}/zipball/main'
 headers = {'Authorization': 'token ' + token if token else None}
 downloadedZIPName = 'mobystk.zip'
 updateFolderName = f'{user}-{repository}-'
