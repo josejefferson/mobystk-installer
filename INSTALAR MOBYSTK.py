@@ -6,7 +6,7 @@ import subprocess
 from sys import executable
 import zipfile
 
-token = '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'
+token = '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'
 user = 'josejefferson'
 repository = 'mobystk'
 zipURL = f'https://api.github.com/repos/{user}/{repository}/zipball/main'
