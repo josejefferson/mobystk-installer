@@ -321,9 +321,9 @@ def createShortcuts():
 	if os.name != 'nt': return
 	printStep(8, 'Criando atalhos')
 	try:
-		os.system(f"powershell \"$s=(New-Object -COM WScript.Shell).CreateShortcut('%userprofile%\\Desktop\\MobyStk.lnk');$s.TargetPath='{os.getcwd()}\\INICIAR.py';$s.Description='Use seu smartphone como controle de videogame para PC';$s.IconLocation='{os.getcwd()}\\web\\img\\icon.ico';$s.Save()\"")
-		os.system(f"powershell \"$s=(New-Object -COM WScript.Shell).CreateShortcut('%appdata%\\Microsoft\\Windows\\Start Menu\\MobyStk.lnk');$s.TargetPath='{os.getcwd()}\\INICIAR.py';$s.IconLocation='{os.getcwd()}\\web\\img\\icon.ico';$s.Save()\"")
-		os.system(f"powershell \"$s=(New-Object -COM WScript.Shell).CreateShortcut('{os.getcwd()}\\MobyStk.lnk');$s.TargetPath='{os.getcwd()}\\INICIAR.py';$s.IconLocation='{os.getcwd()}\\web\\img\\icon.ico';$s.Save()\"")
+		os.system(f"powershell \"$s=(New-Object -COM WScript.Shell).CreateShortcut('%userprofile%\\Desktop\\MobyStk.lnk');$s.TargetPath='{os.getcwd()}\\INICIAR.py';$s.Description='Use seu smartphone como controle de videogame para PC';$s.IconLocation='{os.getcwd()}\\public\\img\\icon.ico';$s.Save()\"")
+		os.system(f"powershell \"$s=(New-Object -COM WScript.Shell).CreateShortcut('%appdata%\\Microsoft\\Windows\\Start Menu\\MobyStk.lnk');$s.TargetPath='{os.getcwd()}\\INICIAR.py';$s.IconLocation='{os.getcwd()}\\public\\img\\icon.ico';$s.Save()\"")
+		os.system(f"powershell \"$s=(New-Object -COM WScript.Shell).CreateShortcut('{os.getcwd()}\\MobyStk.lnk');$s.TargetPath='{os.getcwd()}\\INICIAR.py';$s.IconLocation='{os.getcwd()}\\public\\img\\icon.ico';$s.Save()\"")
 	except: pass
 
 
